@@ -24,9 +24,14 @@ export function createApp() {
     })
   );
 
+  const allowedOrigin =
+    env.CLIENT_ORIGIN === '*' || !env.CLIENT_ORIGIN || env.CLIENT_ORIGIN === 'true'
+      ? true
+      : env.CLIENT_ORIGIN;
+
   app.use(
     cors({
-      origin: env.CLIENT_ORIGIN,
+      origin: allowedOrigin,
       credentials: true,
     })
   );

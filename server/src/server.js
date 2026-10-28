@@ -8,9 +8,14 @@ import { initSocketManager } from './sockets/socketManager.js';
 const app = createApp();
 const httpServer = http.createServer(app);
 
+const allowedOrigin =
+  env.CLIENT_ORIGIN === '*' || !env.CLIENT_ORIGIN || env.CLIENT_ORIGIN === 'true'
+    ? (origin, callback) => callback(null, true)
+    : env.CLIENT_ORIGIN;
+
 export const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: env.CLIENT_ORIGIN,
+    origin: allowedOrigin,
     methods: ['GET', 'POST'],
     credentials: true,
   },
