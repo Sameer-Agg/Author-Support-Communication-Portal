@@ -130,6 +130,7 @@ CREATE INDEX IF NOT EXISTS idx_books_author_id ON books(author_id);
 CREATE INDEX IF NOT EXISTS idx_books_book_code ON books(book_code);
 
 CREATE INDEX IF NOT EXISTS idx_tickets_author_id ON tickets(author_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_author_status ON tickets(author_id, status);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
 CREATE INDEX IF NOT EXISTS idx_tickets_priority ON tickets(priority);
 CREATE INDEX IF NOT EXISTS idx_tickets_category ON tickets(category);
@@ -139,6 +140,7 @@ CREATE INDEX IF NOT EXISTS idx_tickets_queue_sort ON tickets(status, priority, c
 CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket_id ON ticket_messages(ticket_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_internal_notes_ticket_id ON internal_notes(ticket_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_ai_drafts_ticket_id ON ai_drafts(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_ai_drafts_ticket_created ON ai_drafts(ticket_id, created_at DESC);
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

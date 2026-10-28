@@ -1,36 +1,42 @@
+const currencyFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+});
+
+const dateFormatter = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+const dateTimeFormatter = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 export function formatCurrency(amount) {
   if (amount === null || amount === undefined || isNaN(Number(amount))) {
     return '—';
   }
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(Number(amount));
+  return currencyFormatter.format(Number(amount));
 }
 
 export function formatDate(dateStr) {
   if (!dateStr) return '—';
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  return dateFormatter.format(date);
 }
 
 export function formatDateTime(dateStr) {
   if (!dateStr) return '—';
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return dateTimeFormatter.format(date);
 }
 
 export function formatRelativeTime(dateStr) {
@@ -49,15 +55,15 @@ export function formatRelativeTime(dateStr) {
   return formatDate(dateStr);
 }
 
-export function getCategoryLabel(category) {
-  const map = {
-    royalty_payments: 'Royalty & Payments',
-    isbn_metadata: 'ISBN & Metadata',
-    printing_quality: 'Printing Quality',
-    distribution_availability: 'Distribution & Availability',
-    book_status_production: 'Production Status',
-    general_inquiry: 'General Inquiry',
-  };
-  return map[category] || category || 'General';
-}
+const CATEGORY_LABELS = {
+  royalty_payments: 'Royalty & Payments',
+  isbn_metadata: 'ISBN & Metadata',
+  printing_quality: 'Printing Quality',
+  distribution_availability: 'Distribution & Availability',
+  book_status_production: 'Production Status',
+  general_inquiry: 'General Inquiry',
+};
 
+export function getCategoryLabel(category) {
+  return CATEGORY_LABELS[category] || category || 'General';
+}

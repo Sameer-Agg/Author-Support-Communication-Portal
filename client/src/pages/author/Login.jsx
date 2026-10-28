@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { KeyRound, Mail, AlertCircle, ArrowRight } from 'lucide-react';
+import { KeyRound, Mail, ArrowRight } from 'lucide-react';
+import { AlertBanner } from '../../components/common/AlertBanner.jsx';
+import { DemoCredentials } from '../../components/author/DemoCredentials.jsx';
 
 export function Login() {
   const { login, isAuthenticated, isAdmin } = useAuth();
@@ -11,9 +13,25 @@ export function Login() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  if (isAuthenticated) {
-    return <Navigate to={isAdmin ? '/admin/queue' : '/books'} replace />;
-  }
+  const handleEmailChange = useCallback((e) => {
+    setEmail(e.target.value);
+  }, []);
+
+  const handlePasswordChange = useCallback((e) => {
+    setPassword(e.target.value);
+  }, []);
+
+  const handleDemoAuthorClick = useCallback(() => {
+    setEmail('priya.sharma@email.com');
+    setPassword('Author@123');
+    setError('');
+  }, []);
+
+  const handleDemoAdminClick = useCallback(() => {
+    setEmail('admin@bookleaf.in');
+    setPassword('Admin@123');
+    setError('');
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,11 +56,9 @@ export function Login() {
     }
   };
 
-  const setDemoCredentials = (demoEmail, demoPass) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError('');
-  };
+  if (isAuthenticated) {
+    return <Navigate to={isAdmin ? '/admin/queue' : '/books'} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -58,12 +74,7 @@ export function Login() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 shadow sm:rounded-lg sm:px-10 border border-slate-200">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="p-3 rounded-md bg-rose-50 border border-rose-200 flex items-start space-x-2 text-rose-800 text-sm">
-                <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
+            <AlertBanner message={error} />
 
             <div>
               <label className="block text-sm font-medium text-slate-700">Email Address</label>
@@ -74,7 +85,7 @@ export function Login() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-slate-900"
                   placeholder="author@example.com"
                   autoComplete="email"
@@ -92,7 +103,7 @@ export function Login() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-slate-900"
                   placeholder="••••••••"
                   autoComplete="current-password"
@@ -111,32 +122,12 @@ export function Login() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider text-center mb-3">
-              Quick Test Credentials
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setDemoCredentials('priya.sharma@email.com', 'Author@123')}
-                className="px-2.5 py-1.5 text-xs text-left bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded text-slate-700 font-medium"
-              >
-                <div className="font-semibold text-slate-900">Author Priya</div>
-                <div className="text-[10px] text-slate-500 truncate">priya.sharma@email.com</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setDemoCredentials('admin@bookleaf.in', 'Admin@123')}
-                className="px-2.5 py-1.5 text-xs text-left bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded text-slate-700 font-medium"
-              >
-                <div className="font-semibold text-slate-900">Admin Account</div>
-                <div className="text-[10px] text-slate-500 truncate">admin@bookleaf.in</div>
-              </button>
-            </div>
-          </div>
+          <DemoCredentials
+            onSelectAuthor={handleDemoAuthorClick}
+            onSelectAdmin={handleDemoAdminClick}
+          />
         </div>
       </div>
     </div>
   );
 }
-

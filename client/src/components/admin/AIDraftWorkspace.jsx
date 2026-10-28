@@ -11,29 +11,49 @@ export function AIDraftWorkspace({ ticketId, onReplySent }) {
   const [error, setError] = useState('');
   const [isManual, setIsManual] = useState(false);
 
-  const fetchDraft = useCallback(async (force = false) => {
-    try {
-      if (force) setRegenerating(true);
-      else setLoading(true);
-      setError('');
+  const fetchDraft = useCallback(
+    async (force = false) => {
+      try {
+        if (force) setRegenerating(true);
+        else setLoading(true);
+        setError('');
 
-      const url = `/tickets/${ticketId}/draft${force ? '?regenerate=true' : ''}`;
-      const data = await apiRequest(url, { method: 'POST' });
-      setDraft(data.draft);
-      setDraftText(data.draft.draftText || '');
-      setIsManual(false);
-    } catch (err) {
-      setError(err.message || 'AI Draft generation unavailable. You can compose a manual reply.');
-      setIsManual(true);
-    } finally {
-      setLoading(false);
-      setRegenerating(false);
-    }
-  }, [ticketId]);
+        const url = `/tickets/${ticketId}/draft${force ? '?regenerate=true' : ''}`;
+        const data = await apiRequest(url, { method: 'POST' });
+        setDraft(data.draft);
+        setDraftText(data.draft.draftText || '');
+        setIsManual(false);
+      } catch (err) {
+        setError(err.message || 'AI Draft generation unavailable. You can compose a manual reply.');
+        setIsManual(true);
+      } finally {
+        setLoading(false);
+        setRegenerating(false);
+      }
+    },
+    [ticketId]
+  );
 
   useEffect(() => {
     fetchDraft(false);
   }, [fetchDraft]);
+
+  const handleRegenerateClick = useCallback(() => {
+    fetchDraft(true);
+  }, [fetchDraft]);
+
+  const handleDraftTextChange = useCallback((e) => {
+    setDraftText(e.target.value);
+  }, []);
+
+  const handleDiscard = useCallback(() => {
+    setDraftText('');
+    setIsManual(true);
+  }, []);
+
+  const handleSwitchToManual = useCallback(() => {
+    setIsManual(true);
+  }, []);
 
   const handleSend = async () => {
     if (!draftText.trim() || sending) return;
@@ -54,11 +74,6 @@ export function AIDraftWorkspace({ ticketId, onReplySent }) {
     }
   };
 
-  const handleDiscard = () => {
-    setDraftText('');
-    setIsManual(true);
-  };
-
   return (
     <div className="bg-white border border-indigo-200 rounded-lg shadow-sm overflow-hidden flex flex-col">
       <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 flex items-center justify-between">
@@ -77,7 +92,7 @@ export function AIDraftWorkspace({ ticketId, onReplySent }) {
         <div className="flex items-center space-x-2">
           <button
             type="button"
-            onClick={() => fetchDraft(true)}
+            onClick={handleRegenerateClick}
             disabled={regenerating || loading}
             className="inline-flex items-center px-2 py-1 text-xs font-medium text-indigo-700 hover:text-indigo-900 hover:bg-indigo-100/70 rounded transition-colors disabled:opacity-50"
             title="Regenerate draft using latest context"
@@ -97,7 +112,7 @@ export function AIDraftWorkspace({ ticketId, onReplySent }) {
             </div>
             <button
               type="button"
-              onClick={() => fetchDraft(true)}
+              onClick={handleRegenerateClick}
               className="text-amber-900 underline font-semibold text-xs ml-2"
             >
               Retry AI
@@ -118,7 +133,7 @@ export function AIDraftWorkspace({ ticketId, onReplySent }) {
               <textarea
                 rows={8}
                 value={draftText}
-                onChange={(e) => setDraftText(e.target.value)}
+                onChange={handleDraftTextChange}
                 placeholder="Compose reply to author or wait for AI draft..."
                 className="w-full p-3 text-xs leading-relaxed border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 font-sans"
               />
@@ -141,7 +156,7 @@ export function AIDraftWorkspace({ ticketId, onReplySent }) {
                 )}
                 <button
                   type="button"
-                  onClick={() => setIsManual(true)}
+                  onClick={handleSwitchToManual}
                   className={`inline-flex items-center px-2.5 py-1 text-xs rounded transition-colors ${
                     isManual
                       ? 'bg-slate-200 text-slate-800 font-semibold'
@@ -169,4 +184,3 @@ export function AIDraftWorkspace({ ticketId, onReplySent }) {
     </div>
   );
 }
-

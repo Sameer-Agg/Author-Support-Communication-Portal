@@ -4,8 +4,11 @@ import { apiRequest } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useSocket } from '../../context/SocketContext.jsx';
 import { StatusBadge } from '../../components/common/StatusBadge.jsx';
-import { formatDate, formatDateTime, getCategoryLabel } from '../../utils/formatters.js';
-import { ArrowLeft, Send, AlertCircle, Paperclip, CheckCircle2 } from 'lucide-react';
+import { AlertBanner } from '../../components/common/AlertBanner.jsx';
+import { MessageBubble } from '../../components/author/MessageBubble.jsx';
+import { MessageComposer } from '../../components/author/MessageComposer.jsx';
+import { formatDate, getCategoryLabel } from '../../utils/formatters.js';
+import { ArrowLeft, Paperclip } from 'lucide-react';
 
 export function TicketDetail() {
   const { id } = useParams();
@@ -22,21 +25,27 @@ export function TicketDetail() {
 
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   const loadTicket = useCallback(async () => {
+    let mounted = true;
     try {
       setLoading(true);
       const data = await apiRequest(`/tickets/${id}`);
-      setTicket(data.ticket);
-      setMessages(data.ticket.messages || []);
+      if (mounted) {
+        setTicket(data.ticket);
+        setMessages(data.ticket.messages || []);
+      }
     } catch (err) {
-      setError(err.message || 'Failed to load ticket');
+      if (mounted) setError(err.message || 'Failed to load ticket');
     } finally {
-      setLoading(false);
+      if (mounted) setLoading(false);
     }
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -45,7 +54,7 @@ export function TicketDetail() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   useEffect(() => {
     if (!socket || !ticket) return;
@@ -74,8 +83,16 @@ export function TicketDetail() {
     };
   }, [socket, ticket, id]);
 
+  const handleBackToTickets = useCallback(() => {
+    navigate('/tickets');
+  }, [navigate]);
+
+  const handleReplyTextChange = useCallback((e) => {
+    setReplyText(e.target.value);
+  }, []);
+
   const handleSendMessage = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!replyText.trim() || sending) return;
 
     const text = replyText.trim();
@@ -104,6 +121,15 @@ export function TicketDetail() {
     }
   };
 
+  const handleReplyKeyDown = useCallback(
+    (e) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        handleSendMessage(e);
+      }
+    },
+    [replyText, sending, ticket, id]
+  );
+
   if (loading) {
     return (
       <div className="space-y-4 max-w-4xl mx-auto">
@@ -116,14 +142,11 @@ export function TicketDetail() {
   if (error && !ticket) {
     return (
       <div className="max-w-4xl mx-auto space-y-4">
-        <div className="p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 flex items-center space-x-2">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span>{error}</span>
-        </div>
+        <AlertBanner message={error} />
         <button
           type="button"
-          onClick={() => navigate('/tickets')}
-          className="inline-flex items-center text-sm text-slate-600 hover:text-slate-900"
+          onClick={handleBackToTickets}
+          className="inline-flex items-center text-sm text-slate-600 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to My Tickets
         </button>
@@ -184,68 +207,21 @@ export function TicketDetail() {
         </div>
 
         <div className="flex-1 p-5 overflow-y-auto space-y-4">
-          {messages.map((msg) => {
-            const isMe = msg.senderId === user.id || msg.senderRole === 'author';
-            return (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
-              >
-                <div className="flex items-center space-x-2 text-xs text-slate-500 mb-1">
-                  <span className="font-semibold text-slate-700">
-                    {isMe ? 'You' : `${msg.senderName || 'BookLeaf Support'} (Support Team)`}
-                  </span>
-                  <span>•</span>
-                  <span>{formatDateTime(msg.createdAt)}</span>
-                </div>
-                <div
-                  className={`max-w-xl rounded-lg px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                    isMe
-                      ? 'bg-emerald-600 text-white rounded-br-none'
-                      : 'bg-slate-100 text-slate-900 rounded-bl-none border border-slate-200'
-                  }`}
-                >
-                  {msg.body}
-                </div>
-              </div>
-            );
-          })}
+          {messages.map((msg) => (
+            <MessageBubble key={msg.id} message={msg} currentUserId={user?.id} />
+          ))}
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSendMessage} className="p-4 bg-slate-50 border-t border-slate-200">
-          {ticket.status === 'resolved' || ticket.status === 'closed' ? (
-            <div className="mb-2 text-xs text-slate-500 flex items-center">
-              <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-              This ticket is marked {ticket.status}. Sending a message will automatically re-open it.
-            </div>
-          ) : null}
-
-          <div className="flex space-x-3">
-            <textarea
-              rows={2}
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              placeholder="Type your reply here..."
-              className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-slate-900 bg-white"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                  handleSendMessage(e);
-                }
-              }}
-            />
-            <button
-              type="submit"
-              disabled={sending || !replyText.trim()}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none disabled:opacity-50 self-end"
-            >
-              <Send className="w-4 h-4 mr-1.5" />
-              {sending ? 'Sending...' : 'Reply'}
-            </button>
-          </div>
-        </form>
+        <MessageComposer
+          replyText={replyText}
+          sending={sending}
+          status={ticket.status}
+          onChange={handleReplyTextChange}
+          onKeyDown={handleReplyKeyDown}
+          onSubmit={handleSendMessage}
+        />
       </div>
     </div>
   );
 }
-

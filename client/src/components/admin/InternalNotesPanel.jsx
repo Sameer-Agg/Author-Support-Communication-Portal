@@ -1,13 +1,29 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { apiRequest } from '../../api/client.js';
 import { formatDateTime } from '../../utils/formatters.js';
-import { Lock, Plus, Send, AlertCircle } from 'lucide-react';
+import { Lock, Plus, AlertCircle } from 'lucide-react';
+
+function InternalNoteCard({ note }) {
+  return (
+    <div className="p-3 bg-white border border-amber-200/80 rounded-md text-xs space-y-1 shadow-2xs">
+      <div className="flex items-center justify-between text-slate-500">
+        <span className="font-semibold text-slate-800">{note.adminName || 'Admin'}</span>
+        <span className="text-[10px]">{formatDateTime(note.createdAt)}</span>
+      </div>
+      <p className="text-slate-700 whitespace-pre-wrap">{note.note}</p>
+    </div>
+  );
+}
 
 export function InternalNotesPanel({ ticketId, initialNotes = [], onNoteAdded }) {
   const [notes, setNotes] = useState(initialNotes);
   const [noteText, setNoteText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const handleNoteTextChange = useCallback((e) => {
+    setNoteText(e.target.value);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,16 +76,7 @@ export function InternalNotesPanel({ ticketId, initialNotes = [], onNoteAdded })
         ) : (
           <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
             {notes.map((n) => (
-              <div
-                key={n.id}
-                className="p-3 bg-white border border-amber-200/80 rounded-md text-xs space-y-1 shadow-2xs"
-              >
-                <div className="flex items-center justify-between text-slate-500">
-                  <span className="font-semibold text-slate-800">{n.adminName || 'Admin'}</span>
-                  <span className="text-[10px]">{formatDateTime(n.createdAt)}</span>
-                </div>
-                <p className="text-slate-700 whitespace-pre-wrap">{n.note}</p>
-              </div>
+              <InternalNoteCard key={n.id} note={n} />
             ))}
           </div>
         )}
@@ -79,7 +86,7 @@ export function InternalNotesPanel({ ticketId, initialNotes = [], onNoteAdded })
             <input
               type="text"
               value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
+              onChange={handleNoteTextChange}
               placeholder="Add an internal operations note..."
               className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 text-slate-900"
             />
@@ -97,4 +104,3 @@ export function InternalNotesPanel({ ticketId, initialNotes = [], onNoteAdded })
     </div>
   );
 }
-

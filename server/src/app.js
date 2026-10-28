@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { apiLimiter } from './middleware/rateLimiter.js';
 import authRoutes from './routes/authRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
@@ -22,6 +23,8 @@ export function createApp() {
 
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+  app.use('/api', apiLimiter);
 
   app.get('/api/health', (req, res) => {
     res.status(200).json({
