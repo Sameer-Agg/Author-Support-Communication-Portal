@@ -1,7 +1,20 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 import { z } from 'zod';
 
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const serverEnvPath = path.resolve(__dirname, '../../.env');
+const rootEnvPath = path.resolve(__dirname, '../../../.env');
+
+if (fs.existsSync(serverEnvPath)) {
+  dotenv.config({ path: serverEnvPath });
+} else if (fs.existsSync(rootEnvPath)) {
+  dotenv.config({ path: rootEnvPath });
+} else {
+  dotenv.config();
+}
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
@@ -21,10 +34,9 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error('❌ Environment validation failed:');
+  console.error('Environment validation failed:');
   console.error(JSON.stringify(parsed.error.format(), null, 2));
   process.exit(1);
 }
 
 export const env = parsed.data;
-
