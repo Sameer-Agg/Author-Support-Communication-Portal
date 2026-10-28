@@ -115,4 +115,18 @@ router.post(
   ticketController.addInternalNote
 );
 
+router.post(
+  '/:id/draft',
+  requireRole('admin'),
+  validate(ticketIdParamSchema),
+  ticketController.getDraft
+);
+
+router.post(
+  '/:id/reclassify',
+  requireRole('admin'),
+  validate(ticketIdParamSchema),
+  ticketController.reclassify
+);
+
 export default router;

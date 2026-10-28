@@ -5,6 +5,8 @@ import {
   emitMessageCreated,
   emitTicketUpdated,
 } from '../sockets/socketManager.js';
+import { queueTicketClassification, classifyTicket } from '../ai/classifier.js';
+import { generateDraft as drafterGenerateDraft } from '../ai/drafter.js';
 
 const ALLOWED_STATUSES = ['open', 'in_progress', 'resolved', 'closed'];
 const ALLOWED_CATEGORIES = [
@@ -56,6 +58,7 @@ export async function createTicket(user, data) {
     await client.query('COMMIT');
 
     emitTicketCreated(ticket);
+    queueTicketClassification(ticket.id);
 
     return ticket;
   } catch (error) {
@@ -488,4 +491,12 @@ export async function addInternalNote(adminUser, ticketId, note) {
     ...res.rows[0],
     adminName: adminUser.name,
   };
+}
+
+export async function generateDraft(ticketId, forceRegenerate = false) {
+  return await drafterGenerateDraft(ticketId, forceRegenerate);
+}
+
+export async function reclassifyTicket(ticketId) {
+  return await classifyTicket(ticketId);
 }

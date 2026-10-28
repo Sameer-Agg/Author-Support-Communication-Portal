@@ -47,3 +47,16 @@ export const addInternalNote = asyncHandler(async (req, res) => {
   );
   res.status(201).json({ note });
 });
+
+export const getDraft = asyncHandler(async (req, res) => {
+  const draft = await ticketService.generateDraft(
+    Number(req.params.id),
+    req.query.regenerate === 'true'
+  );
+  res.status(200).json({ draft });
+});
+
+export const reclassify = asyncHandler(async (req, res) => {
+  const ticket = await ticketService.reclassifyTicket(Number(req.params.id));
+  res.status(200).json({ ticket });
+});
