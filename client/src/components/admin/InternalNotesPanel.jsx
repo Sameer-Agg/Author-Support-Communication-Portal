@@ -1,14 +1,26 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../../api/client.js';
 import { formatDateTime } from '../../utils/formatters.js';
-import { Lock, Plus, AlertCircle } from 'lucide-react';
+import { Lock, Plus, AlertCircle, Trash2 } from 'lucide-react';
 
-function InternalNoteCard({ note }) {
+function InternalNoteCard({ note, onDelete }) {
   return (
-    <div className="p-3 bg-white border border-amber-200/80 rounded-md text-xs space-y-1 shadow-2xs">
+    <div className="group p-3 bg-white border border-amber-200/80 rounded-md text-xs space-y-1 shadow-2xs">
       <div className="flex items-center justify-between text-slate-500">
         <span className="font-semibold text-slate-800">{note.adminName || 'Admin'}</span>
-        <span className="text-[10px]">{formatDateTime(note.createdAt)}</span>
+        <div className="flex items-center space-x-2">
+          <span className="text-[10px]">{formatDateTime(note.createdAt)}</span>
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 transition-opacity p-0.5"
+              title="Delete internal note"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          )}
+        </div>
       </div>
       <p className="text-slate-700 whitespace-pre-wrap">{note.note}</p>
     </div>
@@ -21,9 +33,25 @@ export function InternalNotesPanel({ ticketId, initialNotes = [], onNoteAdded })
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    setNotes(initialNotes);
+  }, [initialNotes]);
+
   const handleNoteTextChange = useCallback((e) => {
     setNoteText(e.target.value);
   }, []);
+
+  const handleDeleteNote = async (noteId) => {
+    if (!window.confirm('Are you sure you want to delete this internal note?')) return;
+    try {
+      await apiRequest(`/tickets/${ticketId}/notes/${noteId}`, {
+        method: 'DELETE',
+      });
+      setNotes((prev) => prev.filter((n) => n.id !== noteId));
+    } catch (err) {
+      setError(err.message || 'Failed to delete internal note');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,7 +104,11 @@ export function InternalNotesPanel({ ticketId, initialNotes = [], onNoteAdded })
         ) : (
           <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
             {notes.map((n) => (
-              <InternalNoteCard key={n.id} note={n} />
+              <InternalNoteCard
+                key={n.id}
+                note={n}
+                onDelete={() => handleDeleteNote(n.id)}
+              />
             ))}
           </div>
         )}

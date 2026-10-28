@@ -71,14 +71,22 @@ export function AdminTicketDetail() {
       }
     };
 
+    const handleMessageDeleted = (payload) => {
+      if (Number(payload.ticketId) === Number(id)) {
+        setMessages((prev) => prev.filter((m) => m.id !== payload.messageId));
+      }
+    };
+
     socket.on('message:new', handleNewMessage);
     socket.on('message:created', handleNewMessage);
     socket.on('ticket:updated', handleTicketUpdated);
+    socket.on('message:deleted', handleMessageDeleted);
 
     return () => {
       socket.off('message:new', handleNewMessage);
       socket.off('message:created', handleNewMessage);
       socket.off('ticket:updated', handleTicketUpdated);
+      socket.off('message:deleted', handleMessageDeleted);
     };
   }, [socket, id]);
 
@@ -139,6 +147,21 @@ export function AdminTicketDetail() {
   const handleNoteAdded = useCallback((newNote) => {
     setInternalNotes((prev) => [...prev, newNote]);
   }, []);
+
+  const handleDeleteMessage = useCallback(
+    async (messageId) => {
+      if (!window.confirm('Are you sure you want to delete this message?')) return;
+      try {
+        await apiRequest(`/tickets/${id}/messages/${messageId}`, {
+          method: 'DELETE',
+        });
+        setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      } catch (err) {
+        setError(err.message || 'Failed to delete message');
+      }
+    },
+    [id]
+  );
 
   if (loading) {
     return (
@@ -202,6 +225,7 @@ export function AdminTicketDetail() {
           <AdminTicketInquiry
             description={ticket.description}
             attachmentName={ticket.attachmentName}
+            attachmentUrl={ticket.attachmentUrl}
           />
 
           <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-80">
@@ -210,7 +234,11 @@ export function AdminTicketDetail() {
             </div>
             <div className="flex-1 p-4 overflow-y-auto space-y-3">
               {messages.map((m) => (
-                <AdminMessageBubble key={m.id} message={m} />
+                <AdminMessageBubble
+                  key={m.id}
+                  message={m}
+                  onDelete={handleDeleteMessage}
+                />
               ))}
               <div ref={messagesEndRef} />
             </div>

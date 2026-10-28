@@ -14,6 +14,7 @@ export async function runMigration() {
 
     await client.query('BEGIN');
     await client.query(sql);
+    await client.query('ALTER TABLE tickets ADD COLUMN IF NOT EXISTS attachment_url TEXT');
     await client.query('COMMIT');
 
     console.log('Migrations executed successfully.');

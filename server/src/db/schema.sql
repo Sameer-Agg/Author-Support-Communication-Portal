@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   subject VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
   attachment_name VARCHAR(255) NULL,
+  attachment_url TEXT NULL,
   status ticket_status NOT NULL DEFAULT 'open',
   category ticket_category NOT NULL DEFAULT 'general_inquiry',
   category_source source_type NOT NULL DEFAULT 'pending',

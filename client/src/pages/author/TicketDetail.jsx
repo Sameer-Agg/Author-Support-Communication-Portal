@@ -5,10 +5,11 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useSocket } from '../../context/SocketContext.jsx';
 import { StatusBadge } from '../../components/common/StatusBadge.jsx';
 import { AlertBanner } from '../../components/common/AlertBanner.jsx';
+import { AttachmentViewer } from '../../components/common/AttachmentViewer.jsx';
 import { MessageBubble } from '../../components/author/MessageBubble.jsx';
 import { MessageComposer } from '../../components/author/MessageComposer.jsx';
 import { formatDate, getCategoryLabel } from '../../utils/formatters.js';
-import { ArrowLeft, Paperclip } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 export function TicketDetail() {
   const { id } = useParams();
@@ -74,14 +75,22 @@ export function TicketDetail() {
       }
     };
 
+    const handleMessageDeleted = (payload) => {
+      if (Number(payload.ticketId) === Number(id)) {
+        setMessages((prev) => prev.filter((m) => m.id !== payload.messageId));
+      }
+    };
+
     socket.on('message:new', handleNewMessage);
     socket.on('message:created', handleNewMessage);
     socket.on('ticket:updated', handleTicketUpdated);
+    socket.on('message:deleted', handleMessageDeleted);
 
     return () => {
       socket.off('message:new', handleNewMessage);
       socket.off('message:created', handleNewMessage);
       socket.off('ticket:updated', handleTicketUpdated);
+      socket.off('message:deleted', handleMessageDeleted);
     };
   }, [socket, id]);
 
@@ -92,6 +101,21 @@ export function TicketDetail() {
   const handleReplyTextChange = useCallback((e) => {
     setReplyText(e.target.value);
   }, []);
+
+  const handleDeleteMessage = useCallback(
+    async (messageId) => {
+      if (!window.confirm('Are you sure you want to delete your note/message?')) return;
+      try {
+        await apiRequest(`/tickets/${id}/messages/${messageId}`, {
+          method: 'DELETE',
+        });
+        setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      } catch (err) {
+        setError(err.message || 'Failed to delete message');
+      }
+    },
+    [id]
+  );
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
@@ -144,14 +168,14 @@ export function TicketDetail() {
           'General / Account Level'
         ),
       },
-      ticket.attachmentName
+      (ticket.attachmentName || ticket.attachmentUrl)
         ? {
             label: 'Attachment',
             value: (
-              <span className="inline-flex items-center truncate">
-                <Paperclip className="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
-                {ticket.attachmentName}
-              </span>
+              <AttachmentViewer
+                attachmentName={ticket.attachmentName}
+                attachmentUrl={ticket.attachmentUrl}
+              />
             ),
           }
         : null,
@@ -223,7 +247,12 @@ export function TicketDetail() {
 
         <div className="flex-1 p-5 overflow-y-auto space-y-4">
           {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} currentUserId={user?.id} />
+            <MessageBubble
+              key={msg.id}
+              message={msg}
+              currentUserId={user?.id}
+              onDelete={handleDeleteMessage}
+            />
           ))}
           <div ref={messagesEndRef} />
         </div>

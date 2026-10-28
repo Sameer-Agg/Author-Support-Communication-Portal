@@ -13,6 +13,7 @@ const createTicketSchema = z.object({
     subject: z.string().trim().min(3, 'Subject must be at least 3 characters').max(255),
     description: z.string().trim().min(10, 'Description must be at least 10 characters').max(5000),
     attachmentName: z.string().trim().max(255).optional().nullable(),
+    attachmentUrl: z.string().optional().nullable(),
   }),
 });
 
@@ -93,6 +94,7 @@ router.post(
 router.get('/', validate(getTicketsSchema), ticketController.getTickets);
 router.get('/:id', validate(ticketIdParamSchema), ticketController.getTicketById);
 router.post('/:id/messages', validate(addMessageSchema), ticketController.addMessage);
+router.delete('/:id/messages/:messageId', ticketController.deleteMessage);
 
 router.patch(
   '/:id',
@@ -113,6 +115,12 @@ router.post(
   requireRole('admin'),
   validate(addNoteSchema),
   ticketController.addInternalNote
+);
+
+router.delete(
+  '/:id/notes/:noteId',
+  requireRole('admin'),
+  ticketController.deleteInternalNote
 );
 
 router.post(

@@ -87,6 +87,13 @@ export function emitMessageCreated(ticketId, authorId, message) {
   ioInstance.to(`user:${authorId}`).emit('message:created', payload);
 }
 
+export function emitMessageDeleted(ticketId, authorId, messageId) {
+  if (!ioInstance) return;
+  const payload = { ticketId, messageId };
+  ioInstance.to('admins').emit('message:deleted', payload);
+  ioInstance.to(`user:${authorId}`).emit('message:deleted', payload);
+}
+
 export function emitTicketUpdated(authorId, ticket) {
   if (!ioInstance) return;
 

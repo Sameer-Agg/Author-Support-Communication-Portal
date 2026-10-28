@@ -16,6 +16,7 @@ export function SubmitQuery() {
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [attachmentName, setAttachmentName] = useState('');
+  const [attachmentUrl, setAttachmentUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -60,12 +61,23 @@ export function SubmitQuery() {
   const handleFileChange = useCallback((e) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Attachment size must not exceed 5MB.');
+        return;
+      }
+      setError('');
       setAttachmentName(file.name);
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        setAttachmentUrl(uploadEvent.target.result);
+      };
+      reader.readAsDataURL(file);
     }
   }, []);
 
   const handleRemoveAttachment = useCallback(() => {
     setAttachmentName('');
+    setAttachmentUrl('');
   }, []);
 
   const handleSubmit = async (e) => {
@@ -89,6 +101,7 @@ export function SubmitQuery() {
         description: description.trim(),
         bookId: selectedBookId ? Number(selectedBookId) : null,
         attachmentName: attachmentName || null,
+        attachmentUrl: attachmentUrl || null,
       };
 
       const res = await apiRequest('/tickets', {
@@ -170,6 +183,7 @@ export function SubmitQuery() {
 
           <AttachmentPicker
             attachmentName={attachmentName}
+            attachmentUrl={attachmentUrl}
             onFileChange={handleFileChange}
             onRemove={handleRemoveAttachment}
           />

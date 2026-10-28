@@ -20,7 +20,7 @@ const aiClassificationSchema = z.object({
 
 export async function classifyTicket(ticketId) {
   const ticketRes = await pool.query(
-    `SELECT id, subject, description, category_source, priority_source 
+    `SELECT id, subject, description, attachment_name, category_source, priority_source 
      FROM tickets 
      WHERE id = $1`,
     [ticketId]
@@ -36,7 +36,11 @@ export async function classifyTicket(ticketId) {
   let source = 'ai';
 
   try {
-    const { system, messages } = buildClassifierPrompt(ticket.subject, ticket.description);
+    const { system, messages } = buildClassifierPrompt(
+      ticket.subject,
+      ticket.description,
+      ticket.attachment_name
+    );
     const aiResult = await executeAIRequest({
       system,
       messages,

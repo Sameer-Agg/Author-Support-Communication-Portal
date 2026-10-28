@@ -25,6 +25,15 @@ export const addMessage = asyncHandler(async (req, res) => {
   res.status(201).json({ message });
 });
 
+export const deleteMessage = asyncHandler(async (req, res) => {
+  const result = await ticketService.deleteMessage(
+    req.user,
+    Number(req.params.id),
+    Number(req.params.messageId)
+  );
+  res.status(200).json(result);
+});
+
 export const updateTicket = asyncHandler(async (req, res) => {
   const ticket = await ticketService.updateTicket(
     req.user,
@@ -46,6 +55,15 @@ export const addInternalNote = asyncHandler(async (req, res) => {
     req.body.note
   );
   res.status(201).json({ note });
+});
+
+export const deleteInternalNote = asyncHandler(async (req, res) => {
+  const result = await ticketService.deleteInternalNote(
+    req.user,
+    Number(req.params.id),
+    Number(req.params.noteId)
+  );
+  res.status(200).json(result);
 });
 
 export const getDraft = asyncHandler(async (req, res) => {

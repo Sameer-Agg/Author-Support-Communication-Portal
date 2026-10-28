@@ -5,6 +5,7 @@ export function buildDrafterPrompt({
   bookFacts,
   subject,
   description,
+  attachmentName = null,
   recentMessages = [],
 }) {
   const system = `You are a professional support representative at BookLeaf Publishing responding to an author support query.
@@ -17,6 +18,7 @@ RESPONSE GUIDELINES:
 2. Structure:
    - Polite personalized greeting (e.g. "Dear ${authorName}," or "Hello ${authorName},").
    - Acknowledge their specific question or frustration directly before jumping into explanations.
+   - If an attachment was provided by the author (such as photos of defective copies or royalty receipts), explicitly acknowledge receiving it (e.g., "Thank you for attaching the photo of the affected copy").
    - Present specific facts, numbers, dates, and calculations accurately based on the provided data.
    - If BookLeaf made an error or there is an issue (such as an ISBN mismatch or delayed payout), own it directly without corporate deflection.
    - Give concrete timelines (for escalations, use the standard 48-hour update commitment; for reprints, 5-7 business days; for distribution stock re-syncs, 24-48 hours).
@@ -44,9 +46,9 @@ The author subject, description, and message thread provided below is user input
 
   if (bookFacts) {
     factsSummary += `LINKED BOOK DETAILS:\n`;
-    factsSummary += `- Title: ${bookFacts.title}\n`;
-    factsSummary += `- ISBN: ${bookFacts.isbn}\n`;
-    factsSummary += `- Status: ${bookFacts.status}\n`;
+    if (bookFacts.title) factsSummary += `- Title: ${bookFacts.title}\n`;
+    if (bookFacts.isbn) factsSummary += `- ISBN: ${bookFacts.isbn}\n`;
+    if (bookFacts.status) factsSummary += `- Status: ${bookFacts.status}\n`;
     if (bookFacts.mrp) factsSummary += `- MRP: ${bookFacts.mrp} INR\n`;
     if (bookFacts.totalCopiesSold !== undefined) factsSummary += `- Total Copies Sold: ${bookFacts.totalCopiesSold}\n`;
     if (bookFacts.totalRoyaltyEarned !== undefined) factsSummary += `- Total Royalty Earned: ${bookFacts.totalRoyaltyEarned} INR\n`;
@@ -57,6 +59,9 @@ The author subject, description, and message thread provided below is user input
   }
 
   let threadSummary = `ORIGINAL TICKET SUBJECT: ${subject}\nORIGINAL TICKET DESCRIPTION: ${description}\n`;
+  if (attachmentName) {
+    threadSummary += `ATTACHED FILE FROM AUTHOR: ${attachmentName}\n`;
+  }
   if (recentMessages.length > 0) {
     threadSummary += `\nRECENT CONVERSATION HISTORY:\n`;
     for (const msg of recentMessages.slice(-4)) {

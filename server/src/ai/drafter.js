@@ -32,7 +32,7 @@ export function computeRoyaltyPayoutSchedule(refDate = new Date()) {
 export async function generateDraft(ticketId, forceRegenerate = false) {
   const ticketRes = await pool.query(
     `SELECT 
-      t.id, t.author_id, t.book_id, t.subject, t.description, t.category, t.status,
+      t.id, t.author_id, t.book_id, t.subject, t.description, t.category, t.status, t.attachment_name,
       u.name AS author_name, u.email AS author_email,
       b.title AS book_title, b.isbn AS book_isbn, b.status AS book_status,
       b.mrp AS book_mrp, b.total_copies_sold, b.total_royalty_earned,
@@ -111,6 +111,7 @@ export async function generateDraft(ticketId, forceRegenerate = false) {
     bookFacts,
     subject: ticket.subject,
     description: ticket.description,
+    attachmentName: ticket.attachment_name,
     recentMessages: messagesRes.rows,
   });
 

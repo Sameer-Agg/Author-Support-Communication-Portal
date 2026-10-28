@@ -3,6 +3,7 @@ import { AppError } from '../utils/AppError.js';
 import {
   emitTicketCreated,
   emitMessageCreated,
+  emitMessageDeleted,
   emitTicketUpdated,
 } from '../sockets/socketManager.js';
 import { queueTicketClassification, classifyTicket } from '../ai/classifier.js';
@@ -20,7 +21,7 @@ const ALLOWED_CATEGORIES = [
 const ALLOWED_PRIORITIES = ['critical', 'high', 'medium', 'low'];
 
 export async function createTicket(user, data) {
-  const { bookId, subject, description, attachmentName } = data;
+  const { bookId, subject, description, attachmentName, attachmentUrl } = data;
   const client = await pool.connect();
 
   try {
@@ -40,11 +41,11 @@ export async function createTicket(user, data) {
 
     const ticketRes = await client.query(
       `INSERT INTO tickets (
-        author_id, book_id, subject, description, attachment_name,
+        author_id, book_id, subject, description, attachment_name, attachment_url,
         status, category, category_source, priority, priority_source, ai_status
-      ) VALUES ($1, $2, $3, $4, $5, 'open', 'general_inquiry', 'pending', 'medium', 'pending', 'pending')
+      ) VALUES ($1, $2, $3, $4, $5, $6, 'open', 'general_inquiry', 'pending', 'medium', 'pending', 'pending')
       RETURNING *`,
-      [user.id, verifiedBookId, subject.trim(), description.trim(), attachmentName || null]
+      [user.id, verifiedBookId, subject.trim(), description.trim(), attachmentName || null, attachmentUrl || null]
     );
 
     const ticket = ticketRes.rows[0];
@@ -60,7 +61,21 @@ export async function createTicket(user, data) {
     emitTicketCreated(ticket);
     queueTicketClassification(ticket.id);
 
-    return ticket;
+    return {
+      id: ticket.id,
+      authorId: ticket.author_id,
+      bookId: ticket.book_id,
+      subject: ticket.subject,
+      description: ticket.description,
+      attachmentName: ticket.attachment_name,
+      attachmentUrl: ticket.attachment_url,
+      status: ticket.status,
+      category: ticket.category,
+      priority: ticket.priority,
+      aiStatus: ticket.ai_status,
+      createdAt: ticket.created_at,
+      updatedAt: ticket.updated_at,
+    };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -165,6 +180,7 @@ export async function getTickets(user, options = {}) {
       t.subject,
       t.description,
       t.attachment_name AS "attachmentName",
+      t.attachment_url AS "attachmentUrl",
       t.status,
       t.category,
       t.category_source AS "categorySource",
@@ -234,6 +250,7 @@ export async function getTicketById(user, ticketId) {
       t.subject,
       t.description,
       t.attachment_name AS "attachmentName",
+      t.attachment_url AS "attachmentUrl",
       t.status,
       t.category,
       t.category_source AS "categorySource",
@@ -320,6 +337,7 @@ export async function getTicketById(user, ticketId) {
       subject: ticket.subject,
       description: ticket.description,
       attachmentName: ticket.attachmentName,
+      attachmentUrl: ticket.attachmentUrl,
       status: ticket.status,
       category: ticket.category,
       createdAt: ticket.createdAt,
@@ -500,6 +518,41 @@ export async function generateDraft(ticketId, forceRegenerate = false) {
   return await drafterGenerateDraft(ticketId, forceRegenerate);
 }
 
-export async function reclassifyTicket(ticketId) {
-  return await classifyTicket(ticketId);
+export async function deleteMessage(user, ticketId, messageId) {
+  const ticketRes = await pool.query('SELECT author_id FROM tickets WHERE id = $1', [ticketId]);
+  if (ticketRes.rows.length === 0) {
+    throw new AppError('Ticket not found', 404, 'NOT_FOUND');
+  }
+  const authorId = ticketRes.rows[0].author_id;
+
+  const msgRes = await pool.query(
+    'SELECT * FROM ticket_messages WHERE id = $1 AND ticket_id = $2',
+    [messageId, ticketId]
+  );
+  if (msgRes.rows.length === 0) {
+    throw new AppError('Message not found', 404, 'NOT_FOUND');
+  }
+
+  const msg = msgRes.rows[0];
+  if (user.role === 'author' && msg.sender_id !== user.id) {
+    throw new AppError('You can only delete your own messages', 403, 'FORBIDDEN');
+  }
+
+  await pool.query('DELETE FROM ticket_messages WHERE id = $1', [messageId]);
+  emitMessageDeleted(ticketId, authorId, messageId);
+
+  return { success: true, messageId };
+}
+
+export async function deleteInternalNote(adminUser, ticketId, noteId) {
+  const noteRes = await pool.query(
+    'SELECT * FROM internal_notes WHERE id = $1 AND ticket_id = $2',
+    [noteId, ticketId]
+  );
+  if (noteRes.rows.length === 0) {
+    throw new AppError('Note not found', 404, 'NOT_FOUND');
+  }
+
+  await pool.query('DELETE FROM internal_notes WHERE id = $1', [noteId]);
+  return { success: true, noteId };
 }
