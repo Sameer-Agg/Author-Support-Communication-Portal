@@ -1,0 +1,15 @@
+{
+  "name": "bookleaf-portal",
+  "version": "1.0.0",
+  "description": "BookLeaf Publishing - Author Support & Communication Portal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build:client": "npm --prefix client run build",
+    "db:migrate": "npm --prefix server run db:migrate",
+    "db:seed": "npm --prefix server run db:seed"
+  }
+}
+
