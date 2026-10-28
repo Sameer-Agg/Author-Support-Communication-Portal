@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -130,6 +130,32 @@ export function TicketDetail() {
     [replyText, sending, ticket, id]
   );
 
+  const ticketMetadata = useMemo(() => {
+    if (!ticket) return [];
+    return [
+      { label: 'Created', value: formatDate(ticket.createdAt) },
+      {
+        label: 'Related Book',
+        value: ticket.bookTitle ? (
+          <span className="font-medium text-slate-900">{ticket.bookTitle}</span>
+        ) : (
+          'General / Account Level'
+        ),
+      },
+      ticket.attachmentName
+        ? {
+            label: 'Attachment',
+            value: (
+              <span className="inline-flex items-center truncate">
+                <Paperclip className="w-3.5 h-3.5 mr-1 text-slate-400 flex-shrink-0" />
+                {ticket.attachmentName}
+              </span>
+            ),
+          }
+        : null,
+    ].filter(Boolean);
+  }, [ticket]);
+
   if (loading) {
     return (
       <div className="space-y-4 max-w-4xl mx-auto">
@@ -179,25 +205,12 @@ export function TicketDetail() {
 
       <div className="bg-white border border-slate-200 rounded-lg p-5 text-sm space-y-2">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-600">
-          <div>
-            <span className="font-semibold text-slate-500">Created:</span>{' '}
-            {formatDate(ticket.createdAt)}
-          </div>
-          <div>
-            <span className="font-semibold text-slate-500">Related Book:</span>{' '}
-            {ticket.bookTitle ? (
-              <span className="font-medium text-slate-900">{ticket.bookTitle}</span>
-            ) : (
-              'General / Account Level'
-            )}
-          </div>
-          {ticket.attachmentName && (
-            <div className="flex items-center">
-              <Paperclip className="w-3.5 h-3.5 mr-1 text-slate-400" />
-              <span className="font-semibold text-slate-500 mr-1">Attachment:</span>
-              <span className="truncate">{ticket.attachmentName}</span>
+          {ticketMetadata.map((meta) => (
+            <div key={meta.label}>
+              <span className="font-semibold text-slate-500 mr-1">{meta.label}:</span>
+              {meta.value}
             </div>
-          )}
+          ))}
         </div>
       </div>
 

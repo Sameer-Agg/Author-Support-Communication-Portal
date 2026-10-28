@@ -19,7 +19,8 @@ export function SocketProvider({ children }) {
       return;
     }
 
-    const socketInstance = io('/', {
+    const wsUrl = import.meta.env.VITE_WS_URL || '/';
+    const socketInstance = io(wsUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,

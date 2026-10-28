@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { SocketProvider } from './context/SocketContext.jsx';
 import { ProtectedRoute } from './routes/ProtectedRoute.jsx';
 import { AdminRoute } from './routes/AdminRoute.jsx';
+import { DefaultRedirect } from './routes/DefaultRedirect.jsx';
 import { LoadingSpinner } from './components/common/LoadingSpinner.jsx';
 
 const Login = lazy(() => import('./pages/author/Login.jsx').then((m) => ({ default: m.Login })));
@@ -13,6 +14,7 @@ const MyTickets = lazy(() => import('./pages/author/MyTickets.jsx').then((m) => 
 const TicketDetail = lazy(() => import('./pages/author/TicketDetail.jsx').then((m) => ({ default: m.TicketDetail })));
 const AdminQueue = lazy(() => import('./pages/admin/AdminQueue.jsx').then((m) => ({ default: m.AdminQueue })));
 const AdminTicketDetail = lazy(() => import('./pages/admin/AdminTicketDetail.jsx').then((m) => ({ default: m.AdminTicketDetail })));
+const NotFound = lazy(() => import('./pages/common/NotFound.jsx').then((m) => ({ default: m.NotFound })));
 
 export default function App() {
   return (
@@ -20,10 +22,10 @@ export default function App() {
       <SocketProvider>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
+            <Route path="/" element={<DefaultRedirect />} />
             <Route path="/login" element={<Login />} />
 
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Navigate to="/books" replace />} />
               <Route path="/books" element={<Books />} />
               <Route path="/submit" element={<SubmitQuery />} />
               <Route path="/tickets" element={<MyTickets />} />
@@ -31,11 +33,12 @@ export default function App() {
             </Route>
 
             <Route path="/admin" element={<AdminRoute />}>
+              <Route index element={<Navigate to="queue" replace />} />
               <Route path="queue" element={<AdminQueue />} />
               <Route path="tickets/:id" element={<AdminTicketDetail />} />
             </Route>
 
-            <Route path="*" element={<Navigate to="/books" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </SocketProvider>

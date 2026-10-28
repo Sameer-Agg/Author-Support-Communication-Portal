@@ -1,4 +1,5 @@
 import { AdminQueueRow } from './AdminQueueRow.jsx';
+import { ADMIN_QUEUE_COLUMNS } from '../../utils/constants.js';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function AdminQueueTable({ tickets, pagination, onPageChange }) {
@@ -8,12 +9,14 @@ export function AdminQueueTable({ tickets, pagination, onPageChange }) {
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
             <tr>
-              <th className="px-5 py-3 text-left">Ticket & Author</th>
-              <th className="px-4 py-3 text-left">Category</th>
-              <th className="px-4 py-3 text-left">Priority</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-left">Assignee</th>
-              <th className="px-4 py-3 text-right">Age</th>
+              {ADMIN_QUEUE_COLUMNS.map((col) => (
+                <th
+                  key={col.label}
+                  className={`px-4 py-3 text-${col.align}`}
+                >
+                  {col.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 text-xs">
@@ -53,4 +56,3 @@ export function AdminQueueTable({ tickets, pagination, onPageChange }) {
     </div>
   );
 }
-
