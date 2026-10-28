@@ -1,4 +1,9 @@
 import { Search, Filter } from 'lucide-react';
+import {
+  STATUS_OPTIONS,
+  CATEGORY_OPTIONS,
+  PRIORITY_OPTIONS,
+} from '../../utils/constants.js';
 
 export function AdminQueueFilterBar({
   searchInput,
@@ -11,6 +16,27 @@ export function AdminQueueFilterBar({
   onFilterChange,
   onResetFilters,
 }) {
+  const filterGroups = [
+    {
+      key: 'status',
+      value: currentStatus,
+      defaultLabel: 'All Statuses',
+      options: STATUS_OPTIONS,
+    },
+    {
+      key: 'category',
+      value: currentCategory,
+      defaultLabel: 'All Categories',
+      options: CATEGORY_OPTIONS,
+    },
+    {
+      key: 'priority',
+      value: currentPriority,
+      defaultLabel: 'All Priorities',
+      options: PRIORITY_OPTIONS,
+    },
+  ];
+
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm space-y-4">
       <form onSubmit={onSearchSubmit} className="flex gap-2">
@@ -38,43 +64,21 @@ export function AdminQueueFilterBar({
           <span>Filters:</span>
         </div>
 
-        <select
-          value={currentStatus}
-          onChange={(e) => onFilterChange({ status: e.target.value, page: 1 })}
-          className="px-2.5 py-1.5 border border-slate-200 rounded-md bg-white text-slate-700"
-        >
-          <option value="">All Statuses</option>
-          <option value="open">Open</option>
-          <option value="in_progress">In Progress</option>
-          <option value="resolved">Resolved</option>
-          <option value="closed">Closed</option>
-        </select>
-
-        <select
-          value={currentCategory}
-          onChange={(e) => onFilterChange({ category: e.target.value, page: 1 })}
-          className="px-2.5 py-1.5 border border-slate-200 rounded-md bg-white text-slate-700"
-        >
-          <option value="">All Categories</option>
-          <option value="royalty_payments">Royalty & Payments</option>
-          <option value="isbn_metadata">ISBN & Metadata</option>
-          <option value="printing_quality">Printing Quality</option>
-          <option value="distribution_availability">Distribution & Availability</option>
-          <option value="book_status_production">Production Status</option>
-          <option value="general_inquiry">General Inquiry</option>
-        </select>
-
-        <select
-          value={currentPriority}
-          onChange={(e) => onFilterChange({ priority: e.target.value, page: 1 })}
-          className="px-2.5 py-1.5 border border-slate-200 rounded-md bg-white text-slate-700"
-        >
-          <option value="">All Priorities</option>
-          <option value="critical">Critical</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
+        {filterGroups.map((group) => (
+          <select
+            key={group.key}
+            value={group.value}
+            onChange={(e) => onFilterChange({ [group.key]: e.target.value, page: 1 })}
+            className="px-2.5 py-1.5 border border-slate-200 rounded-md bg-white text-slate-700 focus:outline-none cursor-pointer"
+          >
+            <option value="">{group.defaultLabel}</option>
+            {group.options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        ))}
 
         {hasActiveFilters && (
           <button
@@ -89,4 +93,3 @@ export function AdminQueueFilterBar({
     </div>
   );
 }
-

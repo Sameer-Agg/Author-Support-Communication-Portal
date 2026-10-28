@@ -1,4 +1,5 @@
 import { BookRow } from './BookRow.jsx';
+import { BOOK_TABLE_COLUMNS } from '../../utils/constants.js';
 
 export function BookTable({ books }) {
   return (
@@ -7,33 +8,15 @@ export function BookTable({ books }) {
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
-              <th scope="col" className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Title & Genre
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                ISBN
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Status
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                MRP
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Copies Sold
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Earned
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Paid
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Pending
-              </th>
-              <th scope="col" className="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Action
-              </th>
+              {BOOK_TABLE_COLUMNS.map((col) => (
+                <th
+                  key={col.label}
+                  scope="col"
+                  className={`px-6 py-3.5 text-${col.align} text-xs font-semibold text-slate-600 uppercase tracking-wider`}
+                >
+                  {col.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
@@ -46,4 +29,3 @@ export function BookTable({ books }) {
     </div>
   );
 }
-

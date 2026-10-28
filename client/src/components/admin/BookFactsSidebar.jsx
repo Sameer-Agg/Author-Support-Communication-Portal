@@ -1,9 +1,26 @@
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
-import { BookOpen, User, DollarSign, Store, Printer, Tag, Calendar, AlertTriangle } from 'lucide-react';
+import { BookOpen, User, AlertTriangle } from 'lucide-react';
 
 export function BookFactsSidebar({ ticket }) {
   const isRollover =
     Number(ticket?.bookRoyaltyPending) > 0 && Number(ticket?.bookRoyaltyPending) < 1000;
+
+  const authorDetails = [
+    ticket.authorPhone ? { label: 'Phone', value: ticket.authorPhone } : null,
+    ticket.authorCity ? { label: 'City', value: ticket.authorCity } : null,
+  ].filter(Boolean);
+
+  const bookFactItems = ticket.bookId
+    ? [
+        { label: 'Status', value: ticket.bookStatus },
+        {
+          label: 'Pub Date',
+          value: ticket.bookPublicationDate ? formatDate(ticket.bookPublicationDate) : 'In Production',
+        },
+        { label: 'MRP', value: formatCurrency(ticket.bookMrp) },
+        { label: 'Print Partner', value: ticket.bookPrintPartner || 'In-House' },
+      ]
+    : [];
 
   return (
     <div className="space-y-4">
@@ -17,16 +34,11 @@ export function BookFactsSidebar({ ticket }) {
             <div className="font-semibold text-slate-900">{ticket.authorName}</div>
             <div className="text-slate-500">{ticket.authorEmail}</div>
           </div>
-          {ticket.authorPhone && (
-            <div className="text-slate-600">
-              <span className="text-slate-400">Phone:</span> {ticket.authorPhone}
+          {authorDetails.map((detail) => (
+            <div key={detail.label} className="text-slate-600">
+              <span className="text-slate-400">{detail.label}:</span> {detail.value}
             </div>
-          )}
-          {ticket.authorCity && (
-            <div className="text-slate-600">
-              <span className="text-slate-400">City:</span> {ticket.authorCity}
-            </div>
-          )}
+          ))}
         </div>
       </div>
 
@@ -46,24 +58,12 @@ export function BookFactsSidebar({ ticket }) {
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-              <div>
-                <span className="text-slate-400 block text-[10px] uppercase">Status</span>
-                <span className="font-medium text-slate-800">{ticket.bookStatus}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[10px] uppercase">Pub Date</span>
-                <span className="font-medium text-slate-800">
-                  {ticket.bookPublicationDate ? formatDate(ticket.bookPublicationDate) : 'In Production'}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[10px] uppercase">MRP</span>
-                <span className="font-medium text-slate-800">{formatCurrency(ticket.bookMrp)}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[10px] uppercase">Print Partner</span>
-                <span className="font-medium text-slate-800">{ticket.bookPrintPartner || 'In-House'}</span>
-              </div>
+              {bookFactItems.map((item) => (
+                <div key={item.label}>
+                  <span className="text-slate-400 block text-[10px] uppercase">{item.label}</span>
+                  <span className="font-medium text-slate-800">{item.value}</span>
+                </div>
+              ))}
             </div>
 
             <div className="p-2.5 bg-slate-50 rounded-md space-y-1.5 border border-slate-200">
@@ -100,19 +100,6 @@ export function BookFactsSidebar({ ticket }) {
           </div>
         )}
       </div>
-
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs space-y-1 text-slate-500">
-        <div className="font-semibold text-slate-700">AI Context Classification:</div>
-        <div>
-          Status: <span className="font-mono text-slate-800">{ticket.aiStatus || 'pending'}</span>
-        </div>
-        {ticket.aiReason && (
-          <div className="text-[11px] text-slate-600 italic mt-1 leading-snug">
-            "{ticket.aiReason}"
-          </div>
-        )}
-      </div>
     </div>
   );
 }
-

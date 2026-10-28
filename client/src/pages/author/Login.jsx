@@ -22,14 +22,14 @@ export function Login() {
   }, []);
 
   const handleDemoAuthorClick = useCallback(() => {
-    setEmail('priya.sharma@email.com');
-    setPassword('Author@123');
+    setEmail(import.meta.env.VITE_DEMO_AUTHOR_EMAIL || 'priya.sharma@email.com');
+    setPassword(import.meta.env.VITE_DEMO_AUTHOR_PASSWORD || 'Author@123');
     setError('');
   }, []);
 
   const handleDemoAdminClick = useCallback(() => {
-    setEmail('admin@bookleaf.in');
-    setPassword('Admin@123');
+    setEmail(import.meta.env.VITE_DEMO_ADMIN_EMAIL || 'admin@bookleaf.in');
+    setPassword(import.meta.env.VITE_DEMO_ADMIN_PASSWORD || 'Admin@123');
     setError('');
   }, []);
 
