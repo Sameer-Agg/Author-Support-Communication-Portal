@@ -66,10 +66,12 @@ export function MyTickets() {
 
     socket.on('ticket:updated', handleTicketUpdated);
     socket.on('message:new', handleNewMessage);
+    socket.on('message:created', handleNewMessage);
 
     return () => {
       socket.off('ticket:updated', handleTicketUpdated);
       socket.off('message:new', handleNewMessage);
+      socket.off('message:created', handleNewMessage);
     };
   }, [socket]);
 
@@ -84,16 +86,6 @@ export function MyTickets() {
       ? 'You do not have any open support requests.'
       : `No tickets match the "${statusFilter.replace('_', ' ')}" status.`;
   }, [statusFilter]);
-
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        {[1, 2, 3].map((n) => (
-          <div key={n} className="h-20 bg-white rounded-lg border border-slate-200 animate-pulse" />
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -118,7 +110,13 @@ export function MyTickets() {
 
       <AlertBanner message={error} />
 
-      {tickets.length === 0 ? (
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="h-20 bg-white rounded-lg border border-slate-200 animate-pulse" />
+          ))}
+        </div>
+      ) : tickets.length === 0 ? (
         <EmptyState
           icon={LifeBuoy}
           title="No support tickets found"

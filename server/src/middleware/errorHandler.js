@@ -17,8 +17,9 @@ export const errorHandler = (err, req, res, next) => {
   }
 
   if (err.name === 'ZodError') {
-    const details = err.errors.map((e) => ({
-      field: e.path.join('.'),
+    const issues = err.issues || err.errors || [];
+    const details = issues.map((e) => ({
+      field: Array.isArray(e.path) ? e.path.join('.') : String(e.path || ''),
       message: e.message,
     }));
     return res.status(422).json({

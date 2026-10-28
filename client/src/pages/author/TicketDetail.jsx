@@ -57,7 +57,7 @@ export function TicketDetail() {
   }, [messages, scrollToBottom]);
 
   useEffect(() => {
-    if (!socket || !ticket) return;
+    if (!socket) return;
 
     const handleNewMessage = (payload) => {
       if (Number(payload.ticketId) === Number(id)) {
@@ -75,13 +75,15 @@ export function TicketDetail() {
     };
 
     socket.on('message:new', handleNewMessage);
+    socket.on('message:created', handleNewMessage);
     socket.on('ticket:updated', handleTicketUpdated);
 
     return () => {
       socket.off('message:new', handleNewMessage);
+      socket.off('message:created', handleNewMessage);
       socket.off('ticket:updated', handleTicketUpdated);
     };
-  }, [socket, ticket, id]);
+  }, [socket, id]);
 
   const handleBackToTickets = useCallback(() => {
     navigate('/tickets');
@@ -127,7 +129,7 @@ export function TicketDetail() {
         handleSendMessage(e);
       }
     },
-    [replyText, sending, ticket, id]
+    [handleSendMessage]
   );
 
   const ticketMetadata = useMemo(() => {

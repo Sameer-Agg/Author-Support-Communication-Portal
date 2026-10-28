@@ -7,12 +7,22 @@ import { apiLimiter } from './middleware/rateLimiter.js';
 import authRoutes from './routes/authRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { AppError } from './utils/AppError.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function createApp() {
   const app = express();
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    })
+  );
 
   app.use(
     cors({
@@ -39,9 +49,20 @@ export function createApp() {
   app.use('/api/books', bookRoutes);
   app.use('/api/tickets', ticketRoutes);
 
-  app.use('*', (req, res, next) => {
-    next(new AppError(`Route ${req.originalUrl} not found`, 404, 'ROUTE_NOT_FOUND'));
-  });
+  const clientDistPath = path.resolve(__dirname, '../../client/dist');
+  if (fs.existsSync(clientDistPath)) {
+    app.use(express.static(clientDistPath));
+    app.get('*', (req, res, next) => {
+      if (req.originalUrl.startsWith('/api')) {
+        return next(new AppError(`Route ${req.originalUrl} not found`, 404, 'ROUTE_NOT_FOUND'));
+      }
+      res.sendFile(path.resolve(clientDistPath, 'index.html'));
+    });
+  } else {
+    app.use('*', (req, res, next) => {
+      next(new AppError(`Route ${req.originalUrl} not found`, 404, 'ROUTE_NOT_FOUND'));
+    });
+  }
 
   app.use(errorHandler);
 

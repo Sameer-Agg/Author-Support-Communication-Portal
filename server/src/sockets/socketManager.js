@@ -81,6 +81,8 @@ export function emitMessageCreated(ticketId, authorId, message) {
     },
   };
 
+  ioInstance.to('admins').emit('message:new', payload);
+  ioInstance.to(`user:${authorId}`).emit('message:new', payload);
   ioInstance.to('admins').emit('message:created', payload);
   ioInstance.to(`user:${authorId}`).emit('message:created', payload);
 }

@@ -54,7 +54,7 @@ export function AdminTicketDetail() {
   }, [loadTicket]);
 
   useEffect(() => {
-    if (!socket || !ticket) return;
+    if (!socket) return;
 
     const handleNewMessage = (payload) => {
       if (Number(payload.ticketId) === Number(id)) {
@@ -72,13 +72,15 @@ export function AdminTicketDetail() {
     };
 
     socket.on('message:new', handleNewMessage);
+    socket.on('message:created', handleNewMessage);
     socket.on('ticket:updated', handleTicketUpdated);
 
     return () => {
       socket.off('message:new', handleNewMessage);
+      socket.off('message:created', handleNewMessage);
       socket.off('ticket:updated', handleTicketUpdated);
     };
-  }, [socket, ticket, id]);
+  }, [socket, id]);
 
   const handleUpdate = useCallback(
     async (patch) => {

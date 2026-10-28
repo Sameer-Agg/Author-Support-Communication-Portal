@@ -88,11 +88,14 @@ export async function getTickets(user, options = {}) {
   if (user.role === 'author') {
     params.push(user.id);
     conditions.push(`t.author_id = $${params.length}`);
-  } else {
-    if (status && ALLOWED_STATUSES.includes(status)) {
-      params.push(status);
-      conditions.push(`t.status = $${params.length}`);
-    }
+  }
+
+  if (status && ALLOWED_STATUSES.includes(status)) {
+    params.push(status);
+    conditions.push(`t.status = $${params.length}`);
+  }
+
+  if (user.role !== 'author') {
     if (category && ALLOWED_CATEGORIES.includes(category)) {
       params.push(category);
       conditions.push(`t.category = $${params.length}`);
