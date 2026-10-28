@@ -3,6 +3,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { pool } from './config/db.js';
+import { initSocketManager } from './sockets/socketManager.js';
 
 const app = createApp();
 const httpServer = http.createServer(app);
@@ -15,13 +16,7 @@ export const io = new SocketIOServer(httpServer, {
   },
 });
 
-io.on('connection', (socket) => {
-  console.log(`[Socket] Connected: ${socket.id}`);
-
-  socket.on('disconnect', () => {
-    console.log(`[Socket] Disconnected: ${socket.id}`);
-  });
-});
+initSocketManager(io);
 
 const PORT = env.PORT;
 
@@ -51,4 +46,3 @@ const gracefulShutdown = (signal) => {
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-

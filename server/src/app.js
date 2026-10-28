@@ -3,6 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import authRoutes from './routes/authRoutes.js';
+import bookRoutes from './routes/bookRoutes.js';
+import ticketRoutes from './routes/ticketRoutes.js';
+import { AppError } from './utils/AppError.js';
 
 export function createApp() {
   const app = express();
@@ -28,8 +32,15 @@ export function createApp() {
     });
   });
 
+  app.use('/api/auth', authRoutes);
+  app.use('/api/books', bookRoutes);
+  app.use('/api/tickets', ticketRoutes);
+
+  app.use('*', (req, res, next) => {
+    next(new AppError(`Route ${req.originalUrl} not found`, 404, 'ROUTE_NOT_FOUND'));
+  });
+
   app.use(errorHandler);
 
   return app;
 }
-
